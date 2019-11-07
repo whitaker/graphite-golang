@@ -5,19 +5,20 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"time"
 )
 
 // Graphite is a struct that defines the relevant properties of a graphite
 // connection
 type Graphite struct {
-	Host     string
-	Port     int
-	Protocol string
-	Timeout  time.Duration
-	Prefix   string
-	conn     net.Conn
-	nop      bool
+	Host       string
+	Port       int
+	Protocol   string
+	Timeout    time.Duration
+	Prefix     string
+	conn       net.Conn
+	nop        bool
 	DisableLog bool
 }
 
@@ -114,7 +115,7 @@ func (graphite *Graphite) sendMetrics(metrics []Metric) error {
 		}
 		metric_name := ""
 		if graphite.Prefix != "" {
-			metric_name = fmt.Sprintf("%s.%s", graphite.Prefix, metric.Name)
+			metric_name = graphite.Prefix + "." + metric.Name
 		} else {
 			metric_name = metric.Name
 		}
@@ -122,7 +123,7 @@ func (graphite *Graphite) sendMetrics(metrics []Metric) error {
 			fmt.Fprintf(graphite.conn, "%s %s %d\n", metric_name, metric.Value, metric.Timestamp)
 			continue
 		}
-		buf.WriteString(fmt.Sprintf("%s %s %d\n", metric_name, metric.Value, metric.Timestamp))
+		buf.WriteString(metric_name + " " + metric.Value + " " + strconv.Itoa(int(metric.Timestamp)) + "\n")
 	}
 	if graphite.Protocol == "tcp" {
 		_, err := graphite.conn.Write(buf.Bytes())
