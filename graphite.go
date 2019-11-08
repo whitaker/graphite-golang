@@ -126,8 +126,10 @@ func (graphite *Graphite) sendMetrics(metrics []Metric) error {
 		buf.WriteString(metric_name + " " + metric.Value + " " + strconv.Itoa(int(metric.Timestamp)) + "\n")
 	}
 	if graphite.Protocol == "tcp" {
+		s := time.Now()
+		graphite.conn.SetDeadline(time.Now().Add(graphite.Timeout))
 		_, err := graphite.conn.Write(buf.Bytes())
-		//fmt.Print("Sent msg:", buf.String(), "'")
+		log.Printf("Sent %5d metrics, %2.02fmb in %4dms: err=%v", len(metrics), float64(buf.Len())/1024/1024, time.Since(s).Milliseconds(), err)
 		if err != nil {
 			return err
 		}
