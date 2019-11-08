@@ -127,7 +127,9 @@ func (graphite *Graphite) sendMetrics(metrics []Metric) error {
 	}
 	if graphite.Protocol == "tcp" {
 		s := time.Now()
-		graphite.conn.SetDeadline(time.Now().Add(graphite.Timeout))
+		if err := graphite.conn.SetDeadline(time.Now().Add(graphite.Timeout)); err != nil {
+			log.Printf("error in SetDeadline: %v", err)
+		}
 		_, err := graphite.conn.Write(buf.Bytes())
 		log.Printf("Sent %5d metrics, %2.02fmb in %4dms: err=%v", len(metrics), float64(buf.Len())/1024/1024, time.Since(s).Milliseconds(), err)
 		if err != nil {
